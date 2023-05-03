@@ -9,7 +9,14 @@ from keras.callbacks import ModelCheckpoint
 import tensorflow as tf
 import glob
 import sys
-
+def dice_coeff(y_true, y_pred):
+  smooth = 1e-7
+  y_true_f = tf.keras.backend.flatten(y_true)
+  y_pred_f = tf.keras.backend.flatten(y_pred)
+  intersection = tf.keras.backend.sum(y_true_f * y_pred_f)
+  return (2. * intersection + smooth) / (tf.keras.backend.sum(y_true_f) + tf.keras.backend.sum(y_pred_f) + smooth)
+def dice_loss(y_true, y_pred):
+  return 1 - dice_coeff(y_true, y_pred)
 def find_latest_checkpoint(checkpoints_path, fail_safe=True):
 
     # This is legacy code, there should always be a "checkpoint" file in your directory
@@ -116,9 +123,9 @@ def train(model,
         else:
             loss_k = 'categorical_crossentropy'
 
-        model.compile(loss=loss_k,
+        model.compile(loss=dice_loss,
                       optimizer=optimizer_name,
-                      metrics=['accuracy'])
+                      metrics=[dice_coeff])
 
     if checkpoints_path is not None:
         config_file = checkpoints_path + "_config.json"
