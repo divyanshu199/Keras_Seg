@@ -10,29 +10,11 @@ import tensorflow as tf
 import glob
 import sys
 def mean_iou(y_true, y_pred):
-    # Convert predictions to integer class values
     y_pred = tf.argmax(y_pred, axis=-1)
-    y_pred = tf.cast(y_pred, tf.float32)
-
-    # Calculate Mean IoU
-    mean_iou = MeanIoU(num_classes=n_classes)
-    mean_iou.update_state(y_true, y_pred)
-    return mean_iou.result().numpy()
-
-def fw_iou(y_true, y_pred):
-    # Convert predictions to integer class values
-    y_pred = tf.argmax(y_pred, axis=-1)
-    y_pred = tf.cast(y_pred, tf.float32)
-
-    # Calculate frequency weights
-    class_counts = tf.reduce_sum(y_true, axis=(0, 1))
-    freq_weights = 1.0 / (class_counts + 1)
-
-    # Calculate FW IoU
-    intersection = tf.reduce_sum(y_true * y_pred, axis=(0, 1))
-    union = tf.reduce_sum(y_true + y_pred, axis=(0, 1)) - intersection
-    fw_iou = tf.reduce_sum(freq_weights * intersection) / tf.reduce_sum(freq_weights * union)
-    return fw_iou
+    y_pred = tf.expand_dims(y_pred, axis=-1)
+    intersection = tf.reduce_sum(y_true * tf.cast(y_pred, y_true.dtype))
+    union = tf.reduce_sum(y_true) + tf.reduce_sum(tf.cast(y_pred, y_true.dtype)) - intersection
+    return intersection / union
 
 def dice_coeff(y_true, y_pred):
   smooth = 1e-7
@@ -150,7 +132,7 @@ def train(model,
 
         model.compile(loss=dice_loss,
                       optimizer=optimizer_name,
-                      metrics=[dice_coeff,mean_iou,fw_iou])
+                      metrics=[dice_coeff,mean_iou,'accuracy'])
 
     if checkpoints_path is not None:
         config_file = checkpoints_path + "_config.json"
