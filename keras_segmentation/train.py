@@ -9,6 +9,7 @@ from keras.callbacks import ModelCheckpoint
 import tensorflow as tf
 import glob
 import sys
+from .metrics import fw_iou,mean_iou
 def dice_coeff(y_true, y_pred):
   smooth = 1e-7
   y_true_f = tf.keras.backend.flatten(y_true)
@@ -125,7 +126,7 @@ def train(model,
 
         model.compile(loss=dice_loss,
                       optimizer=optimizer_name,
-                      metrics=[dice_coeff])
+                      metrics=[dice_coeff,mean_iou,fw_iou])
 
     if checkpoints_path is not None:
         config_file = checkpoints_path + "_config.json"
