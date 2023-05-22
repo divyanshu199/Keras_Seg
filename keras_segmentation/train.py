@@ -9,6 +9,7 @@ from keras.callbacks import ModelCheckpoint
 import tensorflow as tf
 import glob
 import sys
+from keras.metrics import MeanIoU
 def mean_iou(y_true, y_pred):
     y_pred = tf.argmax(y_pred, axis=-1)
     y_pred = tf.expand_dims(y_pred, axis=-1)
@@ -132,7 +133,7 @@ def train(model,
 
         model.compile(loss=dice_loss,
                       optimizer=optimizer_name,
-                      metrics=[dice_coeff,mean_iou,'accuracy'])
+                      metrics=[dice_coeff,mean_iou,'accuracy',MeanIoU(num_classes=2)])
 
     if checkpoints_path is not None:
         config_file = checkpoints_path + "_config.json"
