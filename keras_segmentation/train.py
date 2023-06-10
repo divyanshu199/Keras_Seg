@@ -11,7 +11,13 @@ import glob
 import sys
 from keras.metrics import MeanIoU
 
-
+def mean_iou(y_true, y_pred):
+    y_pred = tf.argmax(y_pred, axis=-1)
+    y_pred = tf.reshape(y_pred, [-1])
+    y_true = tf.reshape(y_true, [-1])
+    ignore_mask = tf.logical_not(tf.math.equal(y_true, 0))  # Ignore class 0 (background)
+    mIoU, update_op = MeanIoU(num_classes=2)(y_true, y_pred, sample_weight=ignore_mask)
+    return mIoU
 def dice_coeff(y_true, y_pred):
   smooth = 1e-7
   y_true_f = tf.keras.backend.flatten(y_true)
@@ -128,7 +134,7 @@ def train(model,
 
         model.compile(loss=dice_loss,
                       optimizer=optimizer_name,
-                      metrics=[dice_coeff,'accuracy',MeanIoU(num_classes=n_classes)])
+                      metrics=[dice_coeff,'accuracy',MeanIoU(num_classes=n_classes),mean_iou])
 
     if checkpoints_path is not None:
         config_file = checkpoints_path + "_config.json"
