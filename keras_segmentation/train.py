@@ -10,12 +10,10 @@ import tensorflow as tf
 import glob
 import sys
 from keras.metrics import MeanIoU
-
 def mean_iou(y_true, y_pred):
     y_pred = tf.argmax(y_pred, axis=-1)
-    y_pred = tf.reshape(y_pred, [-1])
-    y_true = tf.reshape(y_true, [-1])
-    ignore_mask = tf.logical_not(tf.math.equal(y_true, 0))  # Ignore class 0 (background)
+    y_true = tf.argmax(y_true, axis=-1)
+    ignore_mask = tf.math.not_equal(y_true, 0)  # Ignore class 0 (background)
     mIoU, update_op = MeanIoU(num_classes=2)(y_true, y_pred, sample_weight=ignore_mask)
     return mIoU
 def dice_coeff(y_true, y_pred):
