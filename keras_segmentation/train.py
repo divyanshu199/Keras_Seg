@@ -10,12 +10,21 @@ import tensorflow as tf
 import glob
 import sys
 from keras.metrics import MeanIoU
+import keras.backend as K
+
 def mean_iou(y_true, y_pred):
-    y_pred = tf.argmax(y_pred, axis=-1)
-    y_true = tf.argmax(y_true, axis=-1)
-    ignore_mask = tf.math.not_equal(y_true, 0)  # Ignore class 0 (background)
-    mIoU, update_op = MeanIoU(num_classes=2)(y_true, y_pred, sample_weight=ignore_mask)
-    return mIoU
+    # Flatten the tensors
+    y_true_flat = K.flatten(y_true)
+    y_pred_flat = K.flatten(y_pred)
+
+    # Calculate intersection and union
+    intersection = K.sum(y_true_flat * y_pred_flat)
+    union = K.sum(y_true_flat) + K.sum(y_pred_flat) - intersection
+
+    # Calculate IoU
+    iou = intersection / (union + K.epsilon())
+
+    return iou
 def dice_coeff(y_true, y_pred):
   smooth = 1e-7
   y_true_f = tf.keras.backend.flatten(y_true)
